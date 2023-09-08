@@ -4,27 +4,39 @@
 import * as React from 'react'
 import {PokemonDataView, PokemonErrorBoundary, fetchPokemon} from '../pokemon'
 
-let pokemon;
-let error;
+function createResource(fetchResource) {
+    let resource;
+    let error;
 
-const handleSuccess = (response) => {
-    pokemon = response;
-};
+    const handleSuccess = (res) => {
+      resource = res;
+    };
 
-const handleError = (err) => {
-    error = err;
-};
+    const handleError = (err) => {
+      error = err;
+    };
 
-const pokemonPromise = fetchPokemon('pikachu').then(handleSuccess, handleError);
+    const resourcePromise = fetchResource.then(handleSuccess, handleError);
+
+    const read = () => {
+        if (error) {
+            throw error;
+        }
+
+        if (!resource) {
+            throw resourcePromise;
+        }
+
+        return resource;
+    };
+
+    return { read };
+}
+
+const pokemonResource = createResource(fetchPokemon('pikachu'));
 
 function PokemonInfo() {
-  if (error) {
-    throw error;
-  }
-
-  if (!pokemon) {
-      throw pokemonPromise;
-  }
+  const pokemon = pokemonResource.read();
 
   // if the code gets it this far, then the pokemon variable is defined and
   // rendering can continue!
